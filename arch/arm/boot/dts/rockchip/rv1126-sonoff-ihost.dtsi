@@ -37,6 +37,29 @@
 		regulator-max-microvolt = <5000000>;
 	};
 
+	rk809_sound: rk809-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,name = "rockchip,rk809-codec";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,widgets =
+			"Microphone", "Mic Jack",
+			"Headphone", "Headphone Jack";
+		simple-audio-card,routing =
+			"Mic Jack", "MICBIAS1",
+			"IN1P", "Mic Jack",
+			"Headphone Jack", "HPOL",
+			"Headphone Jack", "HPOR";
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s0>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&rk809_codec>;
+		};
+	};
+
 	sdio_pwrseq: pwrseq-sdio {
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rk809 1>;
@@ -256,6 +279,20 @@
 				regulator-boot-on;
 			};
 		};
+
+		rk809_codec: codec {
+			#sound-dai-cells = <0>;
+			compatible = "rockchip,rk809-codec", "rockchip,rk817-codec";
+			clocks = <&cru MCLK_I2S0_TX_OUT2IO>;
+			clock-names = "mclk";
+			pinctrl-names = "default";
+			assigned-clocks = <&cru MCLK_I2S0_TX_OUT2IO>;
+			assigned-clock-parents = <&cru MCLK_I2S0_TX>;
+			pinctrl-0 = <&i2s0m0_mclk>;
+			hp-volume = <20>;
+			spk-volume = <3>;
+			status = "okay";
+		};
 	};
 };
 
@@ -271,6 +308,11 @@
 		interrupts = <RK_PA2 IRQ_TYPE_LEVEL_LOW>;
 		clock-output-names = "xin32k";
 	};
+};
+
+&i2s0 {
+	status = "okay";
+	#sound-dai-cells = <0>;
 };
 
 &gmac {
