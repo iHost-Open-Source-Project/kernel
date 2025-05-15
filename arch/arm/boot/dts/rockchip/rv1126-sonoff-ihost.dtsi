@@ -37,26 +37,27 @@
 		regulator-max-microvolt = <5000000>;
 	};
 
-	rk809_sound: rk809-sound {
+	rk809-sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "rockchip,rk809-codec";
+		simple-audio-card,name = "Analog RK809";
 		simple-audio-card,mclk-fs = <256>;
+
 		simple-audio-card,widgets =
-			"Microphone", "Mic Jack",
-			"Headphone", "Headphone Jack";
+			"Headphone", "Headphones",
+			"Speaker", "Speaker";
 		simple-audio-card,routing =
-			"Mic Jack", "MICBIAS1",
-			"IN1P", "Mic Jack",
-			"Headphone Jack", "HPOL",
-			"Headphone Jack", "HPOR";
+			"Headphones", "HPOL",
+			"Headphones", "HPOR",
+			"Speaker", "SPKO";
 
 		simple-audio-card,cpu {
 			sound-dai = <&i2s0>;
+			#sound-dai-cells = <0>;
 		};
 
 		simple-audio-card,codec {
-			sound-dai = <&rk809_codec>;
+			sound-dai = <&rk809>;
 		};
 	};
 
@@ -92,11 +93,16 @@
 		reg = <0x20>;
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PB1 IRQ_TYPE_LEVEL_LOW>;
+		assigned-clocks = <&cru MCLK_I2S0_TX_OUT2IO>;
+		assigned-clock-parents = <&cru MCLK_I2S0_TX>;
 		#clock-cells = <1>;
+		clock-names = "mclk";
+		clocks = <&cru MCLK_I2S0_TX_OUT2IO>;
 		clock-output-names = "rk808-clkout1", "rk808-clkout2";
 		pinctrl-names = "default";
-		pinctrl-0 = <&pmic_int_l>;
+		pinctrl-0 = <&pmic_int_l>, <&i2s0m0_mclk>;
 		rockchip,system-power-controller;
+		#sound-dai-cells = <0>;
 		wakeup-source;
 
 		vcc1-supply = <&vcc5v0_sys>;
@@ -280,19 +286,6 @@
 			};
 		};
 
-		rk809_codec: codec {
-			#sound-dai-cells = <0>;
-			compatible = "rockchip,rk809-codec", "rockchip,rk817-codec";
-			clocks = <&cru MCLK_I2S0_TX_OUT2IO>;
-			clock-names = "mclk";
-			pinctrl-names = "default";
-			assigned-clocks = <&cru MCLK_I2S0_TX_OUT2IO>;
-			assigned-clock-parents = <&cru MCLK_I2S0_TX>;
-			pinctrl-0 = <&i2s0m0_mclk>;
-			hp-volume = <20>;
-			spk-volume = <3>;
-			status = "okay";
-		};
 	};
 };
 
@@ -313,6 +306,13 @@
 &i2s0 {
 	status = "okay";
 	#sound-dai-cells = <0>;
+	rockchip,clk-trcm = <1>;
+	rockchip,i2s-rx-route = <3 1 2 0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s0m0_sclk_tx>,
+		     <&i2s0m0_lrck_tx>,
+		     <&i2s0m0_sdo0>,
+		     <&i2s0m0_sdo1_sdi3>;
 };
 
 &gmac {
